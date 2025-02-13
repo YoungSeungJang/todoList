@@ -1,101 +1,66 @@
-import Image from "next/image";
+'use client';
+import { ItemsApi } from '@/apis/items';
+import CustomShadowButton from '@/components/button/button';
+import Done from '@/components/done/done';
+import Logo from '@/components/logo/logo';
+import Todo from '@/components/todo/todo';
+import { getItems } from '@/types/type';
+import { useEffect, useRef } from 'react';
+import useToggleCompletion from './hooks/useToggleCompletion';
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [items, setItems, toggleCompletion] = useToggleCompletion([]);
+  const inputRef = useRef<HTMLInputElement>(null);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  useEffect(() => {
+    const fetchItems = async () => {
+      try {
+        const res = await ItemsApi.getItems();
+        setItems(res);
+      } catch (err) {
+        console.error('아이템 가져오기 실패', err);
+      }
+    };
+    fetchItems();
+  }, []);
+
+  const todoItems = items.filter((item: getItems) => !item.isCompleted);
+  const doneItems = items.filter((item: getItems) => item.isCompleted);
+
+  const handleAddItem = async () => {
+    const inputValue = inputRef.current?.value.trim(); // ref로 input 값 접근
+    if (!inputValue) return;
+
+    try {
+      const newItem = await ItemsApi.postItem(inputValue);
+      setItems((prevItems) => [...prevItems, newItem]);
+      if (inputRef.current) inputRef.current.value = ''; // input 필드 초기화
+    } catch (err) {
+      console.error('추가 실패', err);
+    }
+  };
+  return (
+    <div className="mx-auto">
+      <header className="flex gap-2 flex-col">
+        <Logo />
+        <div className="flex gap-2 my-4">
+          <input
+            ref={inputRef}
+            className="px-4 border-2 border-black rounded-3xl 
+        shadow-[5px_5px_0px_rgba(0,0,0,0.8)] w-full outline-none"
+            placeholder="할 일을 입력해 주세요"
+          />
+          <CustomShadowButton
+            label="추가하기"
+            icon="/images/ic/Property 1=plus.svg"
+            onClick={handleAddItem}
+          />
         </div>
+      </header>
+      <main className="flex flex-col md:flex-row gap-2">
+        <Todo items={todoItems} toggleCompletion={toggleCompletion} />
+        <Done items={doneItems} toggleCompletion={toggleCompletion} />
       </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
     </div>
   );
 }
