@@ -47,10 +47,12 @@ const ItemPage = ({ params: { id } }: ItemPageProps) => {
     fileInputRef.current?.click();
   };
 
-  const handleFileChange = (e) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    const imageUrl = URL.createObjectURL(file);
-    setImagePreview(imageUrl);
+    if (file) {
+      const imageUrl = URL.createObjectURL(file);
+      setImagePreview(imageUrl);
+    }
   };
 
   const handleUpdateItem = async () => {
